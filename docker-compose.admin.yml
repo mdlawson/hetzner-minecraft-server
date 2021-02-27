@@ -1,0 +1,19 @@
+version: "3"
+networks:
+  traefik:
+    external: true
+services:
+  mc_admin:
+    restart: always
+    container_name: mc_admin
+    build: ./admin
+    environment:
+      HETZNER_API_TOKEN:
+      MINECRAFT_HOST:
+    tty: true
+    labels:
+      traefik.frontend.rule: Host:${ADMIN_HOST}
+      traefik.port: 8080
+      traefik.enable: true
+    networks:
+      - traefik

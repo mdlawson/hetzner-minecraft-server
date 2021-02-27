@@ -1,0 +1,81 @@
+{% extends "base.html" %} {% block content %}
+<main class="card text-dark">
+  <div class="card-header">
+    Minecraft server
+  </div>
+  {% if online %}
+  <div class="card-body">
+    <div class="row row-cols-auto">
+      <img class="col" src="{{minecraft_status.favicon}}" width="64" height="64" />
+
+      <p class="card-text col">
+        <small class="text-muted">IP:</small>
+        {{ip}}
+        <small class="text-muted"> MOTD:</small>
+        {{minecraft_status.description["extra"][0]["text"]}}
+        <br />
+        <span class="badge bg-secondary">{{minecraft_status.version.name}}</span>
+        <span class="badge bg-secondary">
+          {{minecraft_status.players.online}}/{{minecraft_status.players.max}}
+        </span>
+      </p>
+    </div>
+  </div>
+
+  {% if minecraft_status.players.sample is not None %}
+  <div class="card-footer">Online Players</div>
+  <ul class="list-group list-group-flush">
+    {% for player in minecraft_status.players.sample %}
+    <li class="list-group-item">
+      <img
+        class="rounded me-3"
+        src="https://crafatar.com/avatars/{{str(player.id)}}"
+        width="32"
+        height="32"
+      />{{player.name}}
+    </li>
+    {% end %}
+  </ul>
+  {% else %}
+  <div class="card-footer text-muted">
+    There are no players currently online.
+    {% if is_idle %} Server will shut down soon {% end %}
+  </div>
+  {% end %} 
+  {% else %}
+  <h2 class="card-body text-danger display-6">⬤ Offline</h2>
+  {% end %}
+</main>
+
+<main class="card text-dark mt-2">
+  <div class="card-header">
+    Host
+    {% if host_status == "destroyed" %}
+    <span class="text-danger">⬤ Offline</h2>
+    {% else %}
+    <span>{{host_status}}</span>
+    {% end %}
+  </div>
+  
+</main>
+
+<div class="row row-cols-auto align-items-center mt-2">
+  {% if host_status == "running" %}
+  <form action="{{reverse_url("destroy")}}" method="POST" class="col">
+    <input type="submit" class="btn btn-danger" value="Destroy">
+  </form>
+  {% end %}
+  {% if host_status == "destroyed" %}
+  <form action="{{reverse_url("create")}}" method="POST" class="col">
+    <input type="submit" class="btn btn-primary" value="Start">
+  </form>
+  {% end %}
+  <form action="{{reverse_url("auto_destroy")}}" method="POST" class="col form-check form-switch">
+    <input onChange="this.form.submit()" class="form-check-input" type="checkbox"
+    id="auto_destroy" {{ 'checked=""' if auto_destroy else "" }}>
+    <label class="form-check-label" for="auto_destroy"> Auto-destroy </label>
+  </form>
+</div>
+
+
+{% end %}

@@ -1,0 +1,4 @@
+mcstatus>=5.1.1
+tornado>=6.1
+mcipc>=2.3.1
+hcloud>=1.10.0

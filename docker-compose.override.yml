@@ -1,0 +1,18 @@
+version: "3"
+services:
+  minecraft:
+    environment:
+      ONLINE_MODE: "FALSE"
+  admin:
+    container_name: status
+    build: ./admin
+    command: python -m tornado.autoreload app.py
+    ports:
+      - "8080:8080"
+    environment:
+      DEBUG: "true"
+      MINECRAFT_HOST: minecraft
+      HETZNER_API_TOKEN:
+    volumes:
+      - ./admin:/usr/src/app
+    tty: true

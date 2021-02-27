@@ -1,0 +1,85 @@
+version: "3"
+services:
+  traefik:
+    container_name: traefik
+    image: traefik:1.7
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - acme:/etc/traefik/acme
+    command: --api
+      --entrypoints='Name:http Address::80 Redirect.EntryPoint:https'
+      --entrypoints='Name:https Address::443 TLS'
+      --defaultEntrypoints=http,https
+      --acme
+      --acme.storage=/etc/traefik/acme/acme.json
+      --acme.entryPoint=https
+      --acme.httpChallenge.entryPoint=http
+      --acme.email=${ACME_EMAIL}
+      --acme.onHostRule=true
+      --docker
+      --docker.domain=${MINECRAFT_HOST}
+      --docker.watch=true
+      --docker.exposedByDefault=false
+    labels:
+      traefik.frontend.rule: Host:traefik.${MINECRAFT_HOST}
+      traefik.port: 8080
+      traefik.enable: true
+  watchtower:
+    container_name: watchtower
+    image: v2tec/watchtower
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --schedule "0 0 0 * * *" --cleanup
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce
+    command: -H "tcp://portainer_agent:9001" --admin-password "${PORTAINER_PASSWORD}"
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer:/data
+    labels:
+      traefik.frontend.rule: Host:portainer.${MINECRAFT_HOST}
+      traefik.port: 9000
+      traefik.enable: true
+  portainer_agent:
+    image: portainer/agent
+    container_name: portainer_agent
+    restart: always
+    environment:
+      CAP_HOST_MANAGEMENT: "1"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+  minecraft_browser:
+    restart: always
+    container_name: browser
+    image: filebrowser/filebrowser
+    command: -d /db/database.db --username admin --password "${BROWSER_PASSWORD}"
+    volumes:
+      - mc:/srv
+      - filebrowser:/db
+    labels:
+      traefik.frontend.rule: Host:browser.${MINECRAFT_HOST}
+      traefik.port: 80
+      traefik.enable: true
+  minecraft:
+    restart: always
+  cloudflare-ddns:
+    image: oznu/cloudflare-ddns:latest
+    restart: always
+    environment:
+      - API_KEY=${CLOUDFLARE_API_KEY}
+      - ZONE=${CLOUDFLARE_ZONE}
+      - SUBDOMAIN=${CLOUDFLARE_SUBDOMAIN}
+      - PROXIED=false
+
+volumes:
+  acme:
+  filebrowser:
+  portainer:
